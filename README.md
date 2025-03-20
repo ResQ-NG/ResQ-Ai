@@ -1,6 +1,3 @@
- 
-🚀 **ResQ AI Service** – A FastAPI-based AI service handling real-time threat detection, media analysis, and predictive safety insights for the ResQ platform.  
-
 # ResQ AI Service  
 
 ResQ AI Service is a **FastAPI** microservice responsible for AI-driven threat detection and media analysis within the ResQ platform. This service processes images, videos, and other data to detect potential dangers, enhancing real-time safety monitoring.  
