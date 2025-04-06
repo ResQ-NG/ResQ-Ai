@@ -1,10 +1,15 @@
 from typing import Dict
 from fastapi import FastAPI
 from app.controllers.upload import router as upload_router
+from dotenv import load_dotenv
+
+
+
+load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="FastAPI Application",
+    title="ResQ AI Server",
     description="A basic FastAPI application",
     version="0.1.0",
 )
