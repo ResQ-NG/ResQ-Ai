@@ -4,14 +4,18 @@ from app.services.ai import ResQAIMediaProcessor
 
 
 router = APIRouter()
+from pydantic import BaseModel
 
-@router.post("/process/")
-async def process_media(file_key: str):
+class MediaRequest(BaseModel):
+    file_key: str
+    file_type: str
+
+@router.post("/process-report-media/")
+async def process_media(request: MediaRequest):
     try:
+        file_path = await S3Client().download_s3_file_async(bucket="resq-files", key=request.file_key)
+        result = await ResQAIMediaProcessor().process_media(file_path, request.file_type)
 
-        file_path = await S3Client().download_s3_file_async(bucket="resq-files", key=file_key)
-
-        result = await ResQAIMediaProcessor().process_media(file_path, media_type)
         # Return the processed result
         return {
             "status": "success",

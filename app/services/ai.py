@@ -1,4 +1,5 @@
-from app.lib.constants import MediaTypes
+import mimetypes
+from app.utils.constants import MediaTypes
 
 
 class ResQAIMediaProcessor:
@@ -16,29 +17,54 @@ class ResQAIMediaProcessor:
         self.max_file_size = 100 * 1024 * 1024
 
 
+    def _get_media_type(self, file_path):
+        """
+        Determine the media type based on the file content.
 
-    async def process_media(self, media_file, media_type):
+        Args:
+            file_path: The file path of the media file
+
+        Returns:
+            The media type as a string
+        """
+        # Extract the file extension from the file name
+        file_type = mimetypes.guess_type(file_path)
+        print("evil: ", file_type)
+        for media_category, file_types in self.supported_media_types.items():
+            if file_type in file_types:
+                return media_category
+        return None
+
+
+
+    async def process_media(self, file_path, file_type):
         """
         Asynchronously process different types of media data.
 
         Args:
-            media_file: The uploaded media file object
-            media_type: Type of media (image, video, text, audio)
+            file_path: The file path of the uploaded media
 
         Returns:
             Processed media information
         """
-        # Check if the media_type is in any of the MediaTypes categories
-        if media_type in self.supported_media_types["image"]:
-            return await self._process_image(media_file)
-        elif media_type in self.supported_media_types["video"]:
-            return await self._process_video(media_file)
-        elif media_type in self.supported_media_types["text"]:
-            return await self._process_text(media_file)
-        elif media_type in self.supported_media_types["audio"]:
-            return await self._process_audio(media_file)
-        else:
-            raise ValueError(f"Unsupported media type: {media_type}")
+        try:
+
+            print("processing")
+            # Check if the media_type is in any of the MediaTypes categories
+            if file_type in self.supported_media_types["image"]:
+                return await self._process_image(file_path)
+            elif file_type in self.supported_media_types["video"]:
+                return await self._process_video(file_path)
+            elif file_type in self.supported_media_types["text"]:
+                return await self._process_text(file_path)
+            elif file_type in self.supported_media_types["audio"]:
+                return await self._process_audio(file_path)
+            else:
+                print("we found value error: ", file_type)
+                raise ValueError(f"Unsupported media type: {file_type}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to process media: {str(e)}")
+
 
     async def _process_image(self, image_file):
         """Process image files and extract relevant information."""
