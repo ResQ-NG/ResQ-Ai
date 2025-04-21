@@ -1,4 +1,5 @@
 import mimetypes
+from app.services.processors.image import ImageProcessor
 from app.utils.constants import MediaTypes
 
 
@@ -16,27 +17,7 @@ class ResQAIMediaProcessor:
         self.temp_file_path = "/tmp/"
         self.max_file_size = 100 * 1024 * 1024
 
-
-    def _get_media_type(self, file_path):
-        """
-        Determine the media type based on the file content.
-
-        Args:
-            file_path: The file path of the media file
-
-        Returns:
-            The media type as a string
-        """
-        # Extract the file extension from the file name
-        file_type = mimetypes.guess_type(file_path)
-        print("evil: ", file_type)
-        for media_category, file_types in self.supported_media_types.items():
-            if file_type in file_types:
-                return media_category
-        return None
-
-
-
+ 
     async def process_media(self, file_path, file_type):
         """
         Asynchronously process different types of media data.
@@ -52,11 +33,14 @@ class ResQAIMediaProcessor:
             print("processing")
             # Check if the media_type is in any of the MediaTypes categories
             if file_type in self.supported_media_types["image"]:
-                return await self._process_image(file_path)
+                return await ImageProcessor().process(file_path)
+
             elif file_type in self.supported_media_types["video"]:
                 return await self._process_video(file_path)
+
             elif file_type in self.supported_media_types["text"]:
                 return await self._process_text(file_path)
+
             elif file_type in self.supported_media_types["audio"]:
                 return await self._process_audio(file_path)
             else:
@@ -64,12 +48,6 @@ class ResQAIMediaProcessor:
                 raise ValueError(f"Unsupported media type: {file_type}")
         except Exception as e:
             raise RuntimeError(f"Failed to process media: {str(e)}")
-
-
-    async def _process_image(self, image_file):
-        """Process image files and extract relevant information."""
-        # Implementation will be added later
-        return {"status": "Image processing not yet implemented"}
 
     async def _process_video(self, video_file):
         """Process video files and identify content."""

@@ -1,27 +1,83 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+import os
+from typing import List
+from fastapi import APIRouter, HTTPException
 from app.modules.s3 import S3Client
 from app.services.ai import ResQAIMediaProcessor
-
+from app.utils.logger import main_logger, Status
 
 router = APIRouter()
 from pydantic import BaseModel
+
 
 class MediaRequest(BaseModel):
     file_key: str
     file_type: str
 
-@router.post("/process-report-media/")
+
+class Detection(BaseModel):
+    class_: str
+    confidence: float
+    bbox: List[float]
+
+
+class Summary(BaseModel):
+    detections: List[Detection]
+    summary_text: str
+
+
+class Metadata(BaseModel):
+    path: str
+    format: str
+    dimensions: str
+    size_kb: float
+
+
+class AIResponse(BaseModel):
+    status: str
+    metadata: Metadata
+    summary: Summary
+
+
+@router.post("/process-report-media/", response_model=AIResponse)
 async def process_media(request: MediaRequest):
+    file_path = None
     try:
-        file_path = await S3Client().download_s3_file_async(bucket="resq-files", key=request.file_key)
-        result = await ResQAIMediaProcessor().process_media(file_path, request.file_type)
+        file_path = await S3Client().download_s3_file_async(
+            bucket=os.getenv("BUCKET_NAME"),
+            key=request.file_key,
+            fileType=request.file_type,
+        )
+        result = await ResQAIMediaProcessor().process_media(
+            file_path, request.file_type
+        )
 
-        # Return the processed result
-        return {
-            "status": "success",
-            "result": result
-        }
-
-        # return something later
+        # Return structured response using the defined Pydantic model
+        return AIResponse(
+            status=result.get("status", "success"),
+            metadata=Metadata(
+                path=result.get("metadata", {}).get("path", ""),
+                format=result.get("metadata", {}).get("format", ""),
+                dimensions=result.get("metadata", {}).get("dimensions", ""),
+                size_kb=result.get("metadata", {}).get("size_kb", 0.0),
+            ),
+            summary=Summary(
+                detections=[
+                    Detection(
+                        class_=detection.get("class", ""),
+                        confidence=detection.get("confidence", 0.0),
+                        bbox=detection.get("bbox", [0.0, 0.0, 0.0, 0.0]),
+                    )
+                    for detection in result.get("summary", {}).get("detections", [])
+                ],
+                summary_text=result.get("summary", {}).get("summary_text", ""),
+            ),
+        )
     except Exception as e:
+        main_logger(f"error processing media file {e}", Status.ERROR)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+    finally:
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
