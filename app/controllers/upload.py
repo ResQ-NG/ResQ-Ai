@@ -1,41 +1,14 @@
 import os
-from typing import List
+
 from fastapi import APIRouter, HTTPException
 from app.modules.s3 import S3Client
+from app.schema.upload import AIResponse, Detection, MediaRequest, Metadata, ProcessTextContentRequest, Summary
 from app.services.ai import ResQAIMediaProcessor
 from app.utils.logger import main_logger, Status
 
 router = APIRouter()
-from pydantic import BaseModel
 
 
-class MediaRequest(BaseModel):
-    file_key: str
-    file_type: str
-
-
-class Detection(BaseModel):
-    class_: str
-    confidence: float
-    bbox: List[float]
-
-
-class Summary(BaseModel):
-    detections: List[Detection]
-    summary_text: str
-
-
-class Metadata(BaseModel):
-    path: str
-    format: str
-    dimensions: str
-    size_kb: float
-
-
-class AIResponse(BaseModel):
-    status: str
-    metadata: Metadata
-    summary: Summary
 
 
 @router.post("/process-report-media/", response_model=AIResponse)
@@ -81,3 +54,28 @@ async def process_media(request: MediaRequest):
                 os.remove(file_path)
             except Exception:
                 pass
+
+
+
+@router.post("/process-report-text-content/", response_model=AIResponse)
+async def process_text_content(request: ProcessTextContentRequest):
+    try:
+        result = await ResQAIMediaProcessor().process_text(request.summary)
+
+        # Return structured response using the defined Pydantic model
+        return AIResponse(
+            status=result.get("status", "success"),
+            metadata=Metadata(
+                path="",
+                format="text",
+                dimensions="",
+                size_kb=0.0,
+            ),
+            summary=Summary(
+                detections=[],
+                summary_text=result.get("summary_text", ""),
+            ),
+        )
+    except Exception as e:
+        main_logger(f"error processing text content: {e}", Status.ERROR)
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
