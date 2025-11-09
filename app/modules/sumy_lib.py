@@ -1,11 +1,12 @@
+import nltk
+
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
 from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
-import nltk
-from app.utils.logger import main_logger, Status
 
+from app.utils.logger import main_logger, Status
 
 # Download required NLTK data
 try:

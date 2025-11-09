@@ -1,14 +1,18 @@
 import os
-
 from fastapi import APIRouter, HTTPException
 from app.modules.s3 import S3Client
-from app.schema.upload import AIResponse, Detection, MediaRequest, Metadata, ProcessTextContentRequest, Summary
+from app.schema.upload import (
+    AIResponse,
+    Detection,
+    MediaRequest,
+    Metadata,
+    ProcessTextContentRequest,
+    Summary,
+)
 from app.services.ai import ResQAIMediaProcessor
 from app.utils.logger import main_logger, Status
 
 router = APIRouter()
-
-
 
 
 @router.post("/process-report-media/", response_model=AIResponse)
@@ -46,15 +50,16 @@ async def process_media(request: MediaRequest):
             ),
         )
     except Exception as e:
-        main_logger(f"error processing media file {e}", Status.ERROR)
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        main_logger.log(f"error processing media file {e}", Status.ERROR)
+        raise HTTPException(
+            status_code=500, detail=f"Processing failed: {str(e)}"
+        ) from e
     finally:
         if file_path and os.path.exists(file_path):
             try:
                 os.remove(file_path)
-            except Exception:
-                pass
-
+            except Exception as e:
+                main_logger.log(f"error deleting media file {e}", Status.ERROR)
 
 
 @router.post("/process-report-text-content/", response_model=AIResponse)
@@ -77,5 +82,7 @@ async def process_text_content(request: ProcessTextContentRequest):
             ),
         )
     except Exception as e:
-        main_logger(f"error processing text content: {e}", Status.ERROR)
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        main_logger.log(f"error processing text content: {e}", Status.ERROR)
+        raise HTTPException(
+            status_code=500, detail=f"Processing failed: {str(e)}"
+        ) from e

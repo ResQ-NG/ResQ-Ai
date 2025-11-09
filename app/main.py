@@ -4,9 +4,6 @@ from app.controllers.upload import router as upload_router
 from dotenv import load_dotenv
 
 
-
-
-
 load_dotenv()
 
 # Initialize FastAPI app
@@ -15,7 +12,6 @@ app = FastAPI(
     description="A basic FastAPI application",
     version="0.1.0",
 )
-
 
 
 app = FastAPI()

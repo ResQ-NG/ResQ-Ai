@@ -3,8 +3,6 @@ import os
 from app.modules.yolo import YOLOImageSummarizer
 
 
-
-
 class ImageProcessor:
     """
     Responsible for processing image files and extracting relevant information.
@@ -19,8 +17,6 @@ class ImageProcessor:
             summarizer: The summarizer instance to use for generating content from processed images
         """
         self.summarizer = summarizer or YOLOImageSummarizer()
-
-
 
     async def process(self, image_path):
         """
@@ -39,17 +35,10 @@ class ImageProcessor:
             # Use the summarizer to generate content from the image
             summary = await self.summarizer.summarize_image(image_info)
 
-            result = {
-                "status": "success",
-                "metadata": image_info,
-                "summary": summary
-            }
+            result = {"status": "success", "metadata": image_info, "summary": summary}
             return result
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def _extract_image_metadata(self, image_path):
         """
@@ -67,12 +56,11 @@ class ImageProcessor:
                 format_name = img.format
                 file_size = os.path.getsize(image_path) / 1024  # size in KB
 
-
                 return {
                     "path": image_path,
                     "format": format_name,
                     "dimensions": f"{width}x{height}",
-                    "size_kb": round(file_size, 2)
+                    "size_kb": round(file_size, 2),
                 }
         except Exception as e:
             # Fallback to basic info if PIL fails
@@ -80,5 +68,5 @@ class ImageProcessor:
                 "path": image_path,
                 "format": "unknown",
                 "dimensions": "unknown",
-                "size_kb": "unknown"
+                "size_kb": "unknown",
             }

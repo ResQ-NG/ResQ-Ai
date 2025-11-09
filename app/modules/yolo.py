@@ -17,7 +17,6 @@ class YOLOImageSummarizer:
         self.model = YOLO(model_path)
         main_logger.log(f"YOLO model initialized with {model_path}", Status.INFO)
 
-
     async def summarize_image(self, image_info):
         """
         Analyze an image using YOLO and generate a summary of detected objects.
@@ -32,8 +31,6 @@ class YOLOImageSummarizer:
         main_logger.log(f"Processing image: {image_path}", Status.INFO)
         results = self.model(image_path)
 
-
-
         # Extract detection information
         detections = []
         for result in results:
@@ -41,19 +38,18 @@ class YOLOImageSummarizer:
                 obj = {
                     "class": result.names[int(box.cls[0])],
                     "confidence": float(box.conf[0]),
-                    "bbox": box.xyxy[0].tolist()
+                    "bbox": box.xyxy[0].tolist(),
                 }
                 detections.append(obj)
-
 
         # Generate a simple text summary
         summary_text = self._generate_summary_text(detections)
 
-        main_logger.log(f"Image analysis complete: {len(detections)} objects detected", Status.SUCCESS)
-        return {
-            "detections": detections,
-            "summary_text": summary_text
-        }
+        main_logger.log(
+            f"Image analysis complete: {len(detections)} objects detected",
+            Status.SUCCESS,
+        )
+        return {"detections": detections, "summary_text": summary_text}
 
     def _generate_summary_text(self, detections):
         """
@@ -74,8 +70,6 @@ class YOLOImageSummarizer:
         for det in detections:
             obj_class = det["class"]
             object_counts[obj_class] = object_counts.get(obj_class, 0) + 1
-
-
 
         # Create summary text
         summary_parts = []

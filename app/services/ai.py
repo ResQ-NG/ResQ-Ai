@@ -18,7 +18,6 @@ class ResQAIMediaProcessor:
         self.temp_file_path = "/tmp/"
         self.max_file_size = 100 * 1024 * 1024
 
-
     async def process_media(self, file_path, file_type):
         """
         Asynchronously process different types of media data.
@@ -45,21 +44,14 @@ class ResQAIMediaProcessor:
         except Exception as e:
             raise RuntimeError(f"Failed to process media: {str(e)}")
 
-
-
     async def process_text(self, text_content):
         """Process text files and extract meaningful content."""
         return await TextProcessor().summarize_text(text_content)
-
-
-
-
 
     async def _process_video(self, video_file):
         """Process video files and identify content."""
         # Implementation will be added later
         return {"status": "Video processing not yet implemented"}
-
 
     async def _process_audio(self, audio_file):
         """Process audio files, transcribe content and perform sentiment analysis."""
