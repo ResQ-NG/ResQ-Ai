@@ -1,35 +1,51 @@
 from typing import Dict
 from fastapi import FastAPI
-from app.controllers.upload import router as upload_router
 from dotenv import load_dotenv
 
+from app.controllers.categorizers import router as categorizers_router
+from app.controllers.summarizers import router as summarizers_router
+from app.utils.config import config
 
+# Load environment variables from .env file
 load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(
     title="ResQ AI Server",
-    description="A basic FastAPI application",
+    description="ResQ AI Server provides endpoints for processing and summarizing reports using AI-powered media and text analysis.",
     version="0.1.0",
 )
-
-
-app = FastAPI()
-
 
 @app.get("/")
 async def root() -> Dict[str, str]:
     """
-    Root endpoint that returns a simple greeting message.
+    Root endpoint that returns a welcoming message for the ResQ AI API.
 
     Returns:
-        Dict[str, str]: A dictionary with a welcome message
+        Dict[str, str]: A dictionary with an inviting welcome message and helpful information.
     """
-    return {"message": "Hello World"}
+    return {
+        "message": "👋 Welcome to ResQ AI! 🤖",
+        "info": "This API provides AI-powered endpoints for media and text report analysis. Visit /docs for interactive documentation."
+    }
 
 
-app.include_router(upload_router)
+@app.get("/health", tags=["Health"])
+async def health_check() -> Dict[str, str]:
+    """
+    Health check endpoint that returns the status of the API.
+
+    Returns:
+        Dict[str, str]: Status indicating the API is healthy.
+    """
+    return {"status": "ok", "message": "ResQ AI API is healthy"}
+
+
+# Include application routers
+app.include_router(categorizers_router)
+app.include_router(summarizers_router)
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=config.HOST, port=config.PORT)

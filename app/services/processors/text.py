@@ -1,4 +1,5 @@
-from app.modules.sumy import SumyProcessor
+from app.utils.logger import main_logger, Status
+from app.modules.sumy_lib import SumyProcessor
 
 
 class TextProcessor:
@@ -12,13 +13,15 @@ class TextProcessor:
         # this would be a llm transformer
         self.summarizer = summarizer or SumyProcessor()
 
+    async def summarize_text_on_dumb_ai(self, payload: any):
+        """this would responsible for calling our langchain based agent and fire up the stuff here. this is going to be a really fast ai"""
+        pass
+
     async def summarize_text(self, text_content: str):
         """this would use the summarizer class to summarize a specific text content"""
         try:
             result = await self.summarizer.summarize_text(text_content)
             return {"summary_text": result}
         except Exception as e:
-            from app.utils.logger import main_logger, Status
-
             main_logger.log(f"Error summarizing text: {str(e)}", Status.ERROR)
             return {"summary_text": "Failed to generate summary due to an error."}

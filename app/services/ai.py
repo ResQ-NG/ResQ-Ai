@@ -1,7 +1,7 @@
-import mimetypes
 from app.services.processors.image import ImageProcessor
 from app.services.processors.text import TextProcessor
 from app.utils.constants import MediaTypes
+from app.utils.logger import Status, main_logger
 
 
 class ResQAIMediaProcessor:
@@ -42,7 +42,8 @@ class ResQAIMediaProcessor:
                 print("we found value error: ", file_type)
                 raise ValueError(f"Unsupported media type: {file_type}")
         except Exception as e:
-            raise RuntimeError(f"Failed to process media: {str(e)}")
+            main_logger.log(f"Failed to process media: {str(e)}", Status.ERROR)
+            raise RuntimeError(f"Failed to process media: {str(e)}") from e
 
     async def process_text(self, text_content):
         """Process text files and extract meaningful content."""
