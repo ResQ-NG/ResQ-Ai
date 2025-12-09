@@ -64,7 +64,7 @@ class ColoredFormatter(logging.Formatter):
         ]
 
         if correlation_id:
-            parts.append(f"{dim}[{correlation_id[:8]}]{reset}")
+            parts.append(f"{dim}[{correlation_id}]{reset}")
 
         parts.append(f"{bold}{record.getMessage()}{reset}")
 

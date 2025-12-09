@@ -8,10 +8,10 @@ from app.domain.utils.main import flatten_list_to_string
 
 def _media_type_lookup():
     return {
-        "image": set(MediaTypes.IMAGE.value),
-        "video": set(MediaTypes.VIDEO.value),
-        "audio": set(MediaTypes.AUDIO.value),
-        "text": set(MediaTypes.TEXT.value),
+        "image": set[str](MediaTypes.IMAGE.value),
+        "video": set[str](MediaTypes.VIDEO.value),
+        "audio": set[str](MediaTypes.AUDIO.value),
+        "text": set[str](MediaTypes.TEXT.value),
     }
 
 class ResQAIProcessor:
