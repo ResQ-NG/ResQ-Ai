@@ -1,5 +1,5 @@
 """
-Configuration management for ResQ AI application.
+Configuration management for application.
 Loads and validates environment variables.
 """
 

@@ -20,7 +20,6 @@ pricing = {
 }
 
 
-
 models = {
     "fast": gpt_4o_mini,
     "balanced": claude,

@@ -1,0 +1,27 @@
+
+from fastapi import APIRouter, HTTPException, Depends
+from app.domain.schema.upload import ProcessTextContentRequest, AIResponseProcessTextSimple
+from app.infra.logger import main_logger
+from app.services.ai_processor import ResQAIProcessor
+
+router = APIRouter()
+
+def get_processor():
+    return ResQAIProcessor()
+
+@router.post("/dumb-processing", response_model=AIResponseProcessTextSimple)
+async def process_report_text_content(
+    request: ProcessTextContentRequest,
+    processor: ResQAIProcessor = Depends(get_processor)
+):
+    try:
+        result = await processor.process_json_input(request.summary)
+        return AIResponseProcessTextSimple(
+            status=result.get("status", "success"),
+            summary_text=result.get("summary_text", ""),
+        )
+    except Exception as e:
+        main_logger.log(f"error processing text content: {e}", "ERROR")
+        raise HTTPException(
+            status_code=500, detail=f"Processing failed: {str(e)}"
+        ) from e

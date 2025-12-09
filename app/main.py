@@ -1,10 +1,10 @@
 from typing import Dict
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from app.api.middleware.correlation_id import CorrelationIdMiddleware
+from app.core.config import config
+from app.api.v1.routes.report.process_report import router as process_report_router
 
-from app.controllers.categorizers import router as categorizers_router
-from app.controllers.summarizers import router as summarizers_router
-from app.utils.config import config
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,6 +16,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Add CorrelationIdMiddleware for request correlation ID tracking
+app.add_middleware(CorrelationIdMiddleware)
+
+
 @app.get("/")
 async def root() -> Dict[str, str]:
     """
@@ -26,7 +30,7 @@ async def root() -> Dict[str, str]:
     """
     return {
         "message": "👋 Welcome to ResQ AI! 🤖",
-        "info": "This API provides AI-powered endpoints for media and text report analysis. Visit /docs for interactive documentation."
+        "info": "This API provides AI-powered endpoints for media and text report analysis. Visit /docs for interactive documentation.",
     }
 
 
@@ -42,8 +46,7 @@ async def health_check() -> Dict[str, str]:
 
 
 # Include application routers
-app.include_router(categorizers_router)
-app.include_router(summarizers_router)
+app.include_router(process_report_router, prefix="/api/v1/report", tags=["Report Processing"])
 
 if __name__ == "__main__":
     import uvicorn

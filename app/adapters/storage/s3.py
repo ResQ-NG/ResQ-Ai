@@ -1,63 +1,14 @@
 """
-this is this module for general file processing on """
-from typing import Protocol
+Module for general file processing using AWS S3.
+"""
+
 import tempfile
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 from fastapi.concurrency import run_in_threadpool
 
-
-from app.utils.config import config
-
-class S3Interface(Protocol):
-    """
-    Protocol for S3 client classes. Ensures all S3 clients implement these methods.
-    """
-
-    def _download_s3_file(self, bucket: str, key: str, fileExt: str) -> str:
-        """
-        Downloads a file from an S3 bucket synchronously.
-
-        Args:
-            bucket (str): Name of the S3 bucket.
-            key (str): Object key in S3.
-            fileExt (str): File extension to use for the temporary file.
-
-        Returns:
-            str: Path to the downloaded temporary file.
-
-        Raises:
-            RuntimeError: If download fails or other error occurs.
-        """
-
-
-    async def download_s3_file_async(self, bucket: str, key: str, fileType: str) -> str:
-        """
-        Downloads a file from S3 asynchronously using a threadpool.
-
-        Args:
-            bucket (str): S3 bucket name.
-            key (str): Object key in S3.
-            fileType (str): MIME type of the file to extract extension.
-
-        Returns:
-            str: Path to the downloaded temporary file.
-
-        Raises:
-            RuntimeError: If download fails or other error occurs.
-        """
-
-
-    def _extract_suffix_from_filetype(self, filetype: str) -> str:
-        """
-        Extract file extension from MIME type string.
-
-        Args:
-            filetype (str): MIME type, e.g., "image/jpeg".
-
-        Returns:
-            str: File extension including dot, e.g., ".jpeg". Returns empty string if not parsable.
-        """
+from app.core import config
+from app.core.exceptions import S3DownloadError
 
 
 class S3Client:
@@ -68,26 +19,27 @@ class S3Client:
         s3 = S3Client()
         file_path = await s3.download_s3_file_async("bucket", "object-key", "image/png")
     """
+
     def __init__(self):
         """
         Initializes the S3 client using credentials and region from config.
 
         Raises:
-            RuntimeError: If credentials or S3 client initialization fails.
+            S3DownloadError: If credentials or S3 client initialization fails.
         """
         try:
             self.s3_client = boto3.client(
                 "s3",
-                region_name=config.AWS_REGION,
-                aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
+                region_name=getattr(config, "AWS_REGION", None),
+                aws_access_key_id=getattr(config, "AWS_ACCESS_KEY_ID", None),
+                aws_secret_access_key=getattr(config, "AWS_SECRET_ACCESS_KEY", None),
             )
         except NoCredentialsError as exc:
-            raise RuntimeError(
+            raise S3DownloadError(
                 "AWS credentials not found. Please check your environment variables."
             ) from exc
         except Exception as e:
-            raise RuntimeError(f"Failed to initialize S3 client: {str(e)}") from e
+            raise S3DownloadError(f"Failed to initialize S3 client: {str(e)}") from e
 
     def _download_s3_file(self, bucket: str, key: str, fileExt: str) -> str:
         """
@@ -102,7 +54,7 @@ class S3Client:
             str: Path to downloaded file.
 
         Raises:
-            RuntimeError: If the download fails.
+            S3DownloadError: If the download fails.
         """
         try:
             tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=fileExt)
@@ -111,9 +63,9 @@ class S3Client:
             tmp_file.close()
             return tmp_file_path
         except ClientError as e:
-            raise RuntimeError(f"Failed to download file from S3: {str(e)}") from e
+            raise S3DownloadError(f"Failed to download file from S3: {str(e)}") from e
         except Exception as e:
-            raise RuntimeError(f"An unexpected error occurred: {str(e)}") from e
+            raise S3DownloadError(f"An unexpected error occurred: {str(e)}") from e
 
     async def download_s3_file_async(self, bucket: str, key: str, fileType: str) -> str:
         """
@@ -128,13 +80,15 @@ class S3Client:
             str: Path to the downloaded temp file.
 
         Raises:
-            RuntimeError: If the download fails.
+            S3DownloadError: If the download fails.
         """
         try:
             fileExt = self._extract_suffix_from_filetype(fileType)
             return await run_in_threadpool(self._download_s3_file, bucket, key, fileExt)
         except Exception as e:
-            raise RuntimeError(f"Failed to download file asynchronously: {str(e)}") from e
+            raise S3DownloadError(
+                f"Failed to download file asynchronously: {str(e)}"
+            ) from e
 
     def _extract_suffix_from_filetype(self, filetype: str) -> str:
         """
@@ -149,6 +103,6 @@ class S3Client:
         if not filetype or "/" not in filetype:
             return ""
         split_file = filetype.split("/")
-        if len(split_file) < 2:
+        if len(split_file) < 2 or not split_file[1]:
             return ""
         return f".{split_file[1]}"

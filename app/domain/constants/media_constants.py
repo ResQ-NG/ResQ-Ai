@@ -1,33 +1,35 @@
-MediaTypes = {
-    "image": [
+from enum import Enum
+
+
+class MediaTypes(Enum):
+    IMAGE = [
         "image/jpeg",
         "image/png",
         "image/gif",
         "image/webp",
         "image/tiff",
         "image/bmp",
-    ],
-    "video": [
+    ]
+    VIDEO = [
         "video/mp4",
         "video/mpeg",
         "video/quicktime",
         "video/x-msvideo",
         "video/webm",
-    ],
-    "text": [
+    ]
+    TEXT = [
         "text/plain",
         "text/html",
         "text/csv",
         "text/markdown",
         "application/json",
         "application/xml",
-    ],
-    "audio": [
+    ]
+    AUDIO = [
         "audio/mpeg",
         "audio/wav",
         "audio/ogg",
         "audio/webm",
         "audio/aac",
         "audio/flac",
-    ],
-}
+    ]

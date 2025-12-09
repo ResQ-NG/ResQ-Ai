@@ -30,6 +30,11 @@ class AIResponse(BaseModel):
     metadata: Metadata
     summary: Summary
 
+class AIResponseProcessTextSimple(BaseModel):
+    title: str
+    description: str
+    
+
 
 class ProcessTextContentRequest(BaseModel):
     summary: str
