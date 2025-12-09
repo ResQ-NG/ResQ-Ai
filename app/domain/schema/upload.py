@@ -33,8 +33,8 @@ class AIResponse(BaseModel):
 class AIResponseProcessTextSimple(BaseModel):
     title: str
     description: str
-    
+
 
 
 class ProcessTextContentRequest(BaseModel):
-    summary: str
+    tags: List[str]

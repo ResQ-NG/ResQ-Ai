@@ -15,7 +15,7 @@ async def process_report_text_content(
     processor: ResQAIProcessor = Depends(get_processor)
 ):
     try:
-        result = await processor.process_json_input(request.summary)
+        result = await processor.process_report_tags(request.tags)
         return AIResponseProcessTextSimple(
             status=result.get("status", "success"),
             summary_text=result.get("summary_text", ""),

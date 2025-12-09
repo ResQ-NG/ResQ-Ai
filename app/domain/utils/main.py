@@ -22,3 +22,19 @@ def flatten_json_to_string(payload) -> str:
     else:
         # Assume primitive
         return str(payload)
+
+
+def flatten_list_to_string(lst) -> str:
+    """
+    Flattens a (possibly nested) list to a string of elements separated by semicolons.
+    """
+    result = []
+    for item in lst:
+        if isinstance(item, list):
+            result.append(flatten_list_to_string(item))
+        elif isinstance(item, dict):
+            # If dict, flatten using flatten_json_to_string for consistency
+            result.append(flatten_json_to_string(item))
+        else:
+            result.append(str(item))
+    return "; ".join(result)

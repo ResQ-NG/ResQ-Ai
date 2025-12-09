@@ -1,10 +1,10 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from app.core.exceptions import AIProcessingError
 from app.domain.constants.media_constants import MediaTypes
 from app.services.primitives.image_processing import ImageProcessor
 from app.services.primitives.text_processing import TextProcessor
 from app.infra.logger import main_logger, LoggerStatus
-from app.domain.utils.main import flatten_json_to_string
+from app.domain.utils.main import flatten_list_to_string
 
 def _media_type_lookup():
     return {
@@ -44,14 +44,16 @@ class ResQAIProcessor:
             self.logger.log(f"Text summarization failed: {str(e)}", LoggerStatus.ERROR)
             raise
 
-    async def process_json_input(self, json_input: Any):
+    async def process_report_tags(self, tags: List[str]):
         """
         Flattens a JSON, gets summary (description), and generates a title.
         Returns dict with title and description.
         """
-        flat_text = flatten_json_to_string(json_input)
-        summary = await self.simple_summarize_text(flat_text)
-        title = await self.generate_title(flat_text, summary)
+        flat_text = flatten_list_to_string(tags)
+
+        text_with_context = "user made a report and we found this items " + flat_text
+        summary = await self.simple_summarize_text(text_with_context)
+        title = await self.generate_title(text_with_context, summary)
         return {
             "title": title,
             "description": summary.get("summary_text", "")

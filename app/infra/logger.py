@@ -1,4 +1,3 @@
-# app/infra/logger.py - ENHANCED VERSION
 import logging
 import json
 import os
@@ -8,7 +7,7 @@ from datetime import datetime
 
 
 # Context variable for async-safe correlation ID storage
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
+correlation_id_ctx: ContextVar[Optional[str]] = ContextVar[str | None]('correlation_id', default=None)
 
 
 class LoggerStatus:

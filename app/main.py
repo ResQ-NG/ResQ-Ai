@@ -9,6 +9,7 @@ from app.api.v1.routes.report.process_report import router as process_report_rou
 # Load environment variables from .env file
 load_dotenv()
 
+
 # Initialize FastAPI app
 app = FastAPI(
     title="ResQ AI Server",
