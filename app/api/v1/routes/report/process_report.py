@@ -15,10 +15,10 @@ async def process_report_text_content(
     processor: ResQAIProcessor = Depends(get_processor)
 ):
     try:
-        result = await processor.process_report_tags(request.tags)
+        result = await processor.process_report_tags(request.tags, request.extra_description)
         return AIResponseProcessTextSimple(
-            status=result.get("status", "success"),
-            summary_text=result.get("summary_text", ""),
+            title=result.get("title", "Untitled"),
+            description=result.get("description", ""),
         )
     except Exception as e:
         main_logger.log(f"error processing text content: {e}", "ERROR")

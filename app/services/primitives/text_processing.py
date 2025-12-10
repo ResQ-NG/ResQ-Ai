@@ -1,5 +1,5 @@
 
-from app.adapters.ai.sumy_lib import SumyProcessor
+from app.adapters.ai.sumy_lib import SumyProcessor, SumyInput
 from app.core.exceptions import AIProcessingError
 
 
@@ -34,11 +34,10 @@ class TextProcessor:
             dict: A dictionary containing the summarized text under the "summary_text" key.
         """
         try:
-            summary_result = await self.summarizer.summarize_text(
-                self.summarizer.__class__.__name__ == "SumyProcessor"
-                and type("SumyInput", (), {"text_content": text_content, "sentences_count": 2})()
-                or text_content
-            )
+            # Create proper SumyInput instance
+            sumy_input = SumyInput(text_content=text_content, sentences_count=2)
+            summary_result = await self.summarizer.summarize_text(sumy_input)
+
             # If summarizer returns a pydantic model with attribute, extract summary_text
             summary_text = getattr(summary_result, "summary_text", summary_result)
             return {"summary_text": summary_text}

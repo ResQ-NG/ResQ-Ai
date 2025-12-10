@@ -63,7 +63,11 @@ class ColoredFormatter(logging.Formatter):
             f"{level_color}{record.levelname:8}{reset}",
         ]
 
-        if correlation_id:
+        # Always show correlation ID for SUCCESS and WARNING if present
+        if correlation_id and record.levelname in ("SUCCESS", "WARNING", "ERROR", "CRITICAL"):
+            parts.append(f"{dim}[{correlation_id}]{reset}")
+        # For DEBUG/INFO, only show if present - keep as before
+        elif correlation_id and record.levelname in ("DEBUG", "INFO"):
             parts.append(f"{dim}[{correlation_id}]{reset}")
 
         parts.append(f"{bold}{record.getMessage()}{reset}")
@@ -87,7 +91,7 @@ class JSONFormatter(logging.Formatter):
             'message': record.getMessage(),
         }
 
-        # Add correlation ID
+        # Always include correlation ID if present, notably for any level
         if hasattr(record, 'correlation_id'):
             log_data['correlation_id'] = record.correlation_id
 
@@ -164,13 +168,12 @@ class StructuredLogger:
         # Get correlation ID
         correlation_id = correlation_id_ctx.get()
 
-        # Create extra dict for additional context
+        # Always attach correlation ID for SUCCESS and WARNING (and ERROR); for others, if present.
         extra = {
             'correlation_id': correlation_id,
             'extra_fields': kwargs
         }
 
-        # Log with extra data
         self.logger.log(level, message, extra=extra)
 
     # Convenience methods
@@ -183,11 +186,11 @@ class StructuredLogger:
         self.log(message, LoggerStatus.INFO, **kwargs)
 
     def success(self, message: str, **kwargs):
-        """Log success message."""
+        """Log success message. Always includes correlation id if set."""
         self.log(message, LoggerStatus.SUCCESS, **kwargs)
 
     def warning(self, message: str, **kwargs):
-        """Log warning message."""
+        """Log warning message. Always includes correlation id if set."""
         self.log(message, LoggerStatus.WARNING, **kwargs)
 
     def error(self, message: str, exc_info: bool = False, **kwargs):

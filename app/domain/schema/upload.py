@@ -38,3 +38,4 @@ class AIResponseProcessTextSimple(BaseModel):
 
 class ProcessTextContentRequest(BaseModel):
     tags: List[str]
+    extra_description: List[str]

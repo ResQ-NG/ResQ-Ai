@@ -44,14 +44,15 @@ class ResQAIProcessor:
             self.logger.log(f"Text summarization failed: {str(e)}", LoggerStatus.ERROR)
             raise
 
-    async def process_report_tags(self, tags: List[str]):
+    async def process_report_tags(self, tags: List[str], extra_description: List[str]):
         """
         Flattens a JSON, gets summary (description), and generates a title.
         Returns dict with title and description.
         """
         flat_text = flatten_list_to_string(tags)
+        flat_description = flatten_list_to_string(extra_description)
 
-        text_with_context = "user made a report and we found this items " + flat_text
+        text_with_context = "user made a report and we found this items " + flat_text + " -report came with more information on " + flat_description
         summary = await self.simple_summarize_text(text_with_context)
         title = await self.generate_title(text_with_context, summary)
         return {
