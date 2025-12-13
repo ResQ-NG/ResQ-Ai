@@ -7,7 +7,9 @@ from datetime import datetime
 
 
 # Context variable for async-safe correlation ID storage
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar[str | None]('correlation_id', default=None)
+correlation_id_ctx: ContextVar[Optional[str]] = ContextVar[str | None](
+    "correlation_id", default=None
+)
 
 
 class LoggerStatus:
@@ -31,31 +33,32 @@ class ColoredFormatter(logging.Formatter):
     """
     Colored formatter for human-readable terminal output.
     """
+
     # ANSI color codes
     COLORS = {
-        'DEBUG': '\033[36m',     # Cyan
-        'INFO': '\033[34m',      # Blue
-        'SUCCESS': '\033[32m',   # Green
-        'WARNING': '\033[33m',   # Yellow
-        'ERROR': '\033[31m',     # Red
-        'CRITICAL': '\033[31;1m',# Bold Red
-        'RESET': '\033[0m',      # Reset
-        'BOLD': '\033[1m',       # Bold
-        'DIM': '\033[2m',        # Dim
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[34m",  # Blue
+        "SUCCESS": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[31;1m",  # Bold Red
+        "RESET": "\033[0m",  # Reset
+        "BOLD": "\033[1m",  # Bold
+        "DIM": "\033[2m",  # Dim
     }
 
     def format(self, record):
         # Get color for level
-        level_color = self.COLORS.get(record.levelname, self.COLORS['RESET'])
-        reset = self.COLORS['RESET']
-        dim = self.COLORS['DIM']
-        bold = self.COLORS['BOLD']
+        level_color = self.COLORS.get(record.levelname, self.COLORS["RESET"])
+        reset = self.COLORS["RESET"]
+        dim = self.COLORS["DIM"]
+        bold = self.COLORS["BOLD"]
 
         # Format timestamp
-        timestamp = datetime.fromtimestamp(record.created).strftime('%H:%M:%S.%f')[:-3]
+        timestamp = datetime.fromtimestamp(record.created).strftime("%H:%M:%S.%f")[:-3]
 
         # Get correlation ID from record
-        correlation_id = getattr(record, 'correlation_id', None)
+        correlation_id = getattr(record, "correlation_id", None)
 
         # Build formatted message
         parts = [
@@ -64,7 +67,12 @@ class ColoredFormatter(logging.Formatter):
         ]
 
         # Always show correlation ID for SUCCESS and WARNING if present
-        if correlation_id and record.levelname in ("SUCCESS", "WARNING", "ERROR", "CRITICAL"):
+        if correlation_id and record.levelname in (
+            "SUCCESS",
+            "WARNING",
+            "ERROR",
+            "CRITICAL",
+        ):
             parts.append(f"{dim}[{correlation_id}]{reset}")
         # For DEBUG/INFO, only show if present - keep as before
         elif correlation_id and record.levelname in ("DEBUG", "INFO"):
@@ -73,8 +81,10 @@ class ColoredFormatter(logging.Formatter):
         parts.append(f"{bold}{record.getMessage()}{reset}")
 
         # Add extra fields if present
-        if hasattr(record, 'extra_fields') and record.extra_fields:
-            extra_str = " ".join(f"{dim}{k}={v}{reset}" for k, v in record.extra_fields.items())
+        if hasattr(record, "extra_fields") and record.extra_fields:
+            extra_str = " ".join(
+                f"{dim}{k}={v}{reset}" for k, v in record.extra_fields.items()
+            )
             parts.append(extra_str)
 
         return " │ ".join(parts)
@@ -84,34 +94,32 @@ class JSONFormatter(logging.Formatter):
     """
     JSON formatter for structured logging (production).
     """
+
     def format(self, record):
         log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'level': record.levelname,
-            'message': record.getMessage(),
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
         }
 
         # Always include correlation ID if present, notably for any level
-        if hasattr(record, 'correlation_id'):
-            log_data['correlation_id'] = record.correlation_id
+        if hasattr(record, "correlation_id"):
+            log_data["correlation_id"] = record.correlation_id
 
         # Add extra fields
-        if hasattr(record, 'extra_fields'):
+        if hasattr(record, "extra_fields"):
             log_data.update(record.extra_fields)
 
         # Add exception info if present
         if record.exc_info:
-            log_data['exception'] = self.formatException(record.exc_info)
+            log_data["exception"] = self.formatException(record.exc_info)
 
         return json.dumps(log_data)
 
 
 class StructuredLogger:
     def __init__(
-        self,
-        name: str = "resq-ai",
-        level: str = "DEBUG",
-        use_json: bool = None
+        self, name: str = "resq-ai", level: str = "DEBUG", use_json: bool = None
     ):
         self.logger = logging.getLogger(name)
         self.set_level(level)
@@ -169,10 +177,7 @@ class StructuredLogger:
         correlation_id = correlation_id_ctx.get()
 
         # Always attach correlation ID for SUCCESS and WARNING (and ERROR); for others, if present.
-        extra = {
-            'correlation_id': correlation_id,
-            'extra_fields': kwargs
-        }
+        extra = {"correlation_id": correlation_id, "extra_fields": kwargs}
 
         self.logger.log(level, message, extra=extra)
 
@@ -197,10 +202,7 @@ class StructuredLogger:
         """Log error message with optional exception info."""
         level = LEVEL_MAP.get(LoggerStatus.ERROR, logging.ERROR)
 
-        extra = {
-            'correlation_id': correlation_id_ctx.get(),
-            'extra_fields': kwargs
-        }
+        extra = {"correlation_id": correlation_id_ctx.get(), "extra_fields": kwargs}
 
         self.logger.log(level, message, exc_info=exc_info, extra=extra)
 

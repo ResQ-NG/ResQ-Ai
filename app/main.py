@@ -3,12 +3,10 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 from app.api.middleware.correlation_id import CorrelationIdMiddleware
 from app.core.config import config
-from app.api.v1.routes.report.process_report import router as process_report_router
-
+from app.api.v1.routes.report import categorize_report, summarize_report
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -47,7 +45,14 @@ async def health_check() -> Dict[str, str]:
 
 
 # Include application routers
-app.include_router(process_report_router, prefix="/api/v1/report", tags=["Report Processing"])
+app.include_router(
+    summarize_report.router, prefix="/api/v1/report", tags=["Report Processing"]
+)
+app.include_router(
+    categorize_report.router,
+    prefix="/api/v1/categorize",
+    tags=["Report Categorization"],
+)
 
 if __name__ == "__main__":
     import uvicorn

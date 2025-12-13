@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -30,12 +30,23 @@ class AIResponse(BaseModel):
     metadata: Metadata
     summary: Summary
 
-class AIResponseProcessTextSimple(BaseModel):
+
+class AIResponseLightSummarizationResponse(BaseModel):
     title: str
     description: str
 
 
-
-class ProcessTextContentRequest(BaseModel):
+class AIResponseLightSummarizationRequest(BaseModel):
     tags: List[str]
-    extra_description: List[str]
+    extra_description: Optional[List[str]] = None
+
+
+class AILightCategorizeResponse(BaseModel):
+    message: str
+
+
+class AILightCategorizeRequest(BaseModel):
+    report_id: str
+    title: str
+    description: str
+    cache_key: str 

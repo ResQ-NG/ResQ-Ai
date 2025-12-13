@@ -26,3 +26,6 @@ numpy>=1.26.2
 opencv-python>=4.8.1.78
 torch>=2.2.0
 torchvision>=0.17.0
+
+
+redis>=5.0.0

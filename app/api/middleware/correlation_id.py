@@ -7,7 +7,7 @@ from app.infra.logger import main_logger
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Get or generate correlation id
-        correlation_id = request.headers.get('X-Correlation-ID', str(uuid4()))
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid4()))
 
         # Set in async-safe context
         main_logger.set_correlated_id(correlation_id)
@@ -20,7 +20,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Add the Correlation-ID to response headers
-            response.headers['X-Correlation-ID'] = correlation_id
+            response.headers["X-Correlation-ID"] = correlation_id
 
             return response
         finally:

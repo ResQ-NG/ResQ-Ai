@@ -1,7 +1,5 @@
-
 from app.adapters.ai.sumy_lib import SumyProcessor, SumyInput
 from app.core.exceptions import AIProcessingError
-
 
 
 class TextProcessor:
@@ -44,8 +42,5 @@ class TextProcessor:
         except Exception as e:
             raise AIProcessingError(
                 "Could not summarize text.",
-                details={
-                    "error": str(e),
-                    "input_excerpt": text_content[:100]
-                }
+                details={"error": str(e), "input_excerpt": text_content[:100]},
             ) from e

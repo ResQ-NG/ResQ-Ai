@@ -53,7 +53,9 @@ except Exception as exc:
 
 class SumyInput(BaseModel):
     text_content: str = Field(..., description="The text to summarize")
-    sentences_count: int = Field(2, ge=1, description="Number of sentences in the summary")
+    sentences_count: int = Field(
+        2, ge=1, description="Number of sentences in the summary"
+    )
 
 
 class SumySummaryResult(BaseModel):
@@ -75,9 +77,7 @@ class SumyProcessor:
     def __init__(self, logger: Optional[StructuredLogger] = None):
         self.logger = logger or main_logger
 
-    async def summarize_text(
-        self, input_data: SumyInput
-    ) -> SumySummaryResult:
+    async def summarize_text(self, input_data: SumyInput) -> SumySummaryResult:
         """
         Summarize the provided text content.
 
@@ -94,7 +94,9 @@ class SumyProcessor:
             return SumySummaryResult(summary_text="No text content to summarize.")
 
         try:
-            parser = PlaintextParser.from_string(input_data.text_content, Tokenizer("english"))
+            parser = PlaintextParser.from_string(
+                input_data.text_content, Tokenizer("english")
+            )
             summarizer = LsaSummarizer(Stemmer("english"))
             summarizer.stop_words = get_stop_words("english")
 

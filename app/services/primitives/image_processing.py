@@ -38,15 +38,20 @@ class ImageProcessor:
             Dictionary containing processed image information
         """
         try:
-            self.logger.log(f"Starting image processing: {image_path}", LoggerStatus.INFO)
+            self.logger.log(
+                f"Starting image processing: {image_path}", LoggerStatus.INFO
+            )
 
             image_info = self._extract_image_metadata(image_path)
-            self.logger.log(f"Extracted image metadata: {image_info}", LoggerStatus.DEBUG)
+            self.logger.log(
+                f"Extracted image metadata: {image_info}", LoggerStatus.DEBUG
+            )
 
             # Use the summarizer to generate content from the image
             summary = await self.summarizer.summarize_image(image_info)
             self.logger.log(
-                f"Image summarized. Keys: {list[str](summary.keys())}", LoggerStatus.INFO
+                f"Image summarized. Keys: {list[str](summary.keys())}",
+                LoggerStatus.INFO,
             )
 
             result = {"status": "success", "metadata": image_info, "summary": summary}

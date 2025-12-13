@@ -16,6 +16,13 @@ class Config:
     AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_BUCKET_NAME: Optional[str] = os.getenv("AWS_BUCKET_NAME")
 
+    CACHE_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    CACHE_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    CACHE_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")  # ⚠️ Required for production
+    CACHE_DB: int = int(os.getenv("REDIS_DB", "0"))
+    CACHE_USE_SSL: bool = os.getenv("REDIS_USE_SSL", "false").lower() == "true"
+
+
     # Application Configuration
     APP_ENV: str = os.getenv("APP_ENV", "development")
 
@@ -52,5 +59,30 @@ class Config:
         return cls.APP_ENV.lower() == "production"
 
 
+
+    @classmethod
+    def get_redis_url(cls) -> str:
+        """
+        Build Redis connection URL with authentication.
+
+        Returns:
+            str: Complete Redis URL (e.g., "redis://:password@host:port/db")
+        """
+        scheme = "rediss" if cls.CACHE_USE_SSL else "redis"
+
+        if cls.CACHE_PASSWORD:
+            # Format: redis://:password@host:port/db
+            return f"{scheme}://:{cls.CACHE_PASSWORD}@{cls.CACHE_HOST}:{cls.CACHE_PORT}/{cls.CACHE_DB}"
+        else:
+            # Format: redis://host:port/db (no auth)
+            return f"{scheme}://{cls.CACHE_HOST}:{cls.CACHE_PORT}/{cls.CACHE_DB}"
+
+    @classmethod
+    def validate_cache_config(cls) -> bool:
+        """Validate cache configuration is complete."""
+        if cls.is_production() and not cls.CACHE_PASSWORD:
+            raise ValueError("REDIS_PASSWORD is required in production")
+        return True
+        
 # Create a singleton instance
 config = Config()

@@ -57,7 +57,9 @@ class YOLOImageSummarizer:
     Uses YOLO model to detect objects in images and generate summaries.
     """
 
-    def __init__(self, logger: StructuredLogger, model_path: str = "yolov8n.pt") -> None:
+    def __init__(
+        self, logger: StructuredLogger, model_path: str = "yolov8n.pt"
+    ) -> None:
         """
         Initialize the YOLO summarizer with a model and injected logger.
 
