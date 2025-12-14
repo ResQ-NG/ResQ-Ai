@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 from app.core.exceptions import AIProcessingError
 from app.domain.constants.media_constants import MediaTypes
 from app.services.primitives.image_processing import ImageProcessor
@@ -6,6 +6,8 @@ from app.services.primitives.text_processing import TextProcessor
 from app.infra.logger import main_logger, LoggerStatus
 from app.domain.utils.main import flatten_list_to_string
 from app.adapters.ai.llm.ollama import OllamaLLMEngine
+from app.services.ai_categorizer import ResQAICategorizer
+
 
 
 def _media_type_lookup():
@@ -21,7 +23,8 @@ class ResQAIProcessor:
     def __init__(self, logger=None):
         self.supported_media_types = _media_type_lookup()
         self.logger = logger if logger is not None else main_logger
-        self.ollama_engine = OllamaLLMEngine()
+        self.ollama_engine = OllamaLLMEngine(model="llava")
+        self.categorizer = ResQAICategorizer(logger=self.logger)
 
     async def process_media(self, file_path: str, file_type: str):
         try:
@@ -109,31 +112,3 @@ class ResQAIProcessor:
         if not words:
             return "Untitled"
         return " ".join(words[:8]).capitalize() + ("..." if len(words) > 8 else "")
-
-    async def categorize_report(
-        self, title: str, description: str, metadata: Dict[str, Any]
-    ) -> str:
-        """
-        Naive categorization by matching simple keywords.
-        Looks at title, description and metadata.
-        """
-
-        # grab the category from the redis. first in a recursion. top grouping then down.
-        categories = {
-            "finance": ["invoice", "price", "cost", "budget", "payment"],
-            "health": ["doctor", "hospital", "health", "medicine", "disease"],
-            "technology": ["software", "app", "ai", "computer", "network"],
-            "education": ["school", "teacher", "learning", "exam", "university"],
-            "media": ["image", "video", "audio", "picture"],
-            "other": [],
-        }
-        content_text = f"{title} {description}".lower()
-        # Also consider maybe 'format' or 'type' in metadata
-        metadata_str = (
-            " ".join(str(v) for v in metadata.values()).lower() if metadata else ""
-        )
-        for cat, keywords in categories.items():
-            for kw in keywords:
-                if kw in content_text or kw in metadata_str:
-                    return cat
-        return "other"

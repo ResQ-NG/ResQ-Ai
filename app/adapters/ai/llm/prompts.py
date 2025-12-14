@@ -19,6 +19,25 @@ Here is the content from the user:
 
 
 REPORT_CATEGORIZATION_PROMPT = """
-You are an AI assistant for a software called ResQ, designed to help Nigerian users report real-world cases or issues.
-We have a relatively detailed report now. the title of the report and a detailed summary of the report. 
+You are an AI assistant for ResQ, a platform that helps Nigerian users report real-world cases.
+
+Task: Categorize a report based on its title and description.
+
+Instructions:
+- Summarize the report in your own words.
+- Identify who is affected and what is happening.
+- Compare the situation to available categories.
+- Choose all relevant categories; a report can belong to multiple.
+- For ambiguous cases, prioritize inferred risk and potential harm.
+- Return ONLY a JSON array of category IDs.
+
+Report Title: {title}
+
+Report Description: {description}
+
+Available Categories (with descriptions):
+{categories}
+
+
+Return your answer as a JSON array of category IDs only, nothing else.
 """

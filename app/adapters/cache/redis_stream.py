@@ -38,13 +38,12 @@ class RedisStream:
             str: Message ID (e.g., "1234567890123-0")
         """
         try:
-            # Serialize complex objects
-            serialized = {k: json.dumps(v) if isinstance(v, (dict, list)) else v
-                         for k, v in data.items()}
-
+            # Data should already be encoded (all values should be str, int, float, bytes)
+            # No need to serialize here if encode_redis_stream_payload was used
+            # Redis xadd accepts string values directly
             message_id = await self.redis.xadd(
                 stream_name,
-                serialized,
+                data,
                 maxlen=max_len,
                 approximate=True  # More efficient trimming
             )
@@ -79,6 +78,51 @@ class RedisStream:
             if "BUSYGROUP" in str(e):
                 return True
             raise CacheError(f"Failed to create consumer group: {str(e)}") from e
+
+    async def read_all_messages(
+        self,
+        stream_name: str,
+        start_id: str = "0",
+        count: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Read all messages from stream without consumer group (for debugging).
+
+        Args:
+            stream_name: Stream key
+            start_id: Start reading from this message ID ("0" = beginning, "$" = end)
+            count: Maximum number of messages to read (None = all)
+
+        Returns:
+            List of messages with 'id', 'stream', and 'data' keys
+        """
+        try:
+            messages = await self.redis.xread(
+                {stream_name: start_id},
+                count=count if count else 10000,  # Default to large number
+                block=None  # Non-blocking
+            )
+
+            result = []
+            for stream, msgs in messages:
+                for msg_id, data in msgs:
+                    # Deserialize data
+                    deserialized = {}
+                    for k, v in data.items():
+                        try:
+                            deserialized[k] = json.loads(v)
+                        except (json.JSONDecodeError, TypeError):
+                            deserialized[k] = v
+
+                    result.append({
+                        "id": msg_id,
+                        "stream": stream,
+                        "data": deserialized
+                    })
+
+            return result
+        except Exception as e:
+            raise CacheError(f"Failed to read messages from stream: {str(e)}") from e
 
     async def read_from_stream(
         self,

@@ -26,3 +26,7 @@ models = {
     "accurate": gpt_4_turbo,
     "cheap": gemini,
 }
+
+
+
+OLLAMA_LLAVA = "llava"

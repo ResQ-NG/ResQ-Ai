@@ -40,15 +40,15 @@ from app.infra.logger import StructuredLogger, LoggerStatus, main_logger
 from app.core.exceptions import AIProcessingError
 
 
-# Download required NLTK data
-try:
-    nltk.download("punkt", quiet=True)
-    nltk.download("punkt_tab", quiet=True)
-except Exception as exc:
-    main_logger.log(f"Failed to download NLTK data: {str(exc)}", LoggerStatus.ERROR)
-    raise AIProcessingError(
-        "Failed to download NLTK data.", details={"error": str(exc)}
-    ) from exc
+# # Download required NLTK data
+# try:
+#     nltk.download("punkt", quiet=False)
+#     nltk.download("punkt_tab", quiet=False)
+# except Exception as exc:
+#     main_logger.log(f"Failed to download NLTK data: {str(exc)}", LoggerStatus.ERROR)
+#     raise AIProcessingError(
+#         "Failed to download NLTK data.", details={"error": str(exc)}
+#     ) from exc
 
 
 class SumyInput(BaseModel):

@@ -39,3 +39,43 @@ class RedisCache:
             raise CacheError("Cannot connect to Redis. Check REDIS_HOST and REDIS_PORT.") from exc
         except Exception as exc:
             raise CacheError(f"Redis connection error: {str(exc)}") from exc
+
+    async def get(self, key: str):
+        """Retrieve value from cache by key."""
+        try:
+            return await self.redis.get(key)
+        except Exception as exc:
+            raise CacheError(f"Failed to get key '{key}': {str(exc)}") from exc
+
+    async def set(self, key: str, value: str, ttl: int = None) -> bool:
+        """Store value in cache with optional TTL (seconds)."""
+        try:
+            if ttl:
+                return await self.redis.setex(key, ttl, value)
+            else:
+                return await self.redis.set(key, value)
+        except Exception as exc:
+            raise CacheError(f"Failed to set key '{key}': {str(exc)}") from exc
+
+    async def delete(self, key: str) -> bool:
+        """Delete key from cache."""
+        try:
+            result = await self.redis.delete(key)
+            return result > 0
+        except Exception as exc:
+            raise CacheError(f"Failed to delete key '{key}': {str(exc)}") from exc
+
+    async def exists(self, key: str) -> bool:
+        """Check if key exists in cache."""
+        try:
+            return await self.redis.exists(key) > 0
+        except Exception as exc:
+            raise CacheError(f"Failed to check existence of key '{key}': {str(exc)}") from exc
+
+    async def close(self) -> None:
+        """Close Redis connection."""
+        if self.redis:
+            try:
+                await self.redis.close()
+            except Exception as exc:
+                raise CacheError(f"Failed to close Redis connection: {str(exc)}") from exc

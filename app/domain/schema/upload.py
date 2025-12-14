@@ -49,4 +49,4 @@ class AILightCategorizeRequest(BaseModel):
     report_id: str
     title: str
     description: str
-    cache_key: str 
+    cache_key: Optional[str] = "categories:tree"
