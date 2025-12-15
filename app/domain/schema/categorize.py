@@ -17,8 +17,9 @@ CategoryNode.model_rebuild()
 
 
 
-class StreamInformation(BaseModel):
+class LightCategorizerStreamInformation(BaseModel):
     report_id: str
     recognized_categories: List[str]
     time_added: str
     is_final: bool
+    correlated_id: Optional[str] = None

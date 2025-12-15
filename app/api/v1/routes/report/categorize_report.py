@@ -13,9 +13,13 @@ def get_categorizer(request: Request):
     return ResQAICategorizer(cache=redis_cache, stream=redis_stream)
 
 
-async def process_categorization(categorizer: ResQAICategorizer, title: str, description: str, report_id: str, category_key: str = "categories:tree"):
+async def process_categorization(categorizer: ResQAICategorizer, title: str, description: str, report_id: str, category_key: str = "categories:tree", correlated_id: str = None):
     try:
-        categories = await categorizer.categorize_report(title, description, category_key, report_id=report_id)
+        # Set correlation ID in logger for background task
+        if correlated_id and hasattr(categorizer.logger, 'set_correlated_id'):
+            categorizer.logger.set_correlated_id(correlated_id)
+
+        categories = await categorizer.categorize_report(title, description, category_key, report_id=report_id, correlated_id=correlated_id)
         main_logger.log(f"Categorization complete. Found {len(categories)} categories", "INFO")
         return categories
     except Exception as e:
@@ -33,6 +37,15 @@ async def light_categorize_report(
         # Get categorizer with injected dependencies
         categorizer = get_categorizer(request)
 
+        # Capture correlation ID - try request.state first (set by middleware), fallback to main_logger
+        correlated_id = getattr(request.state, 'correlation_id', None)
+        if not correlated_id and hasattr(main_logger, 'get_correlated_id'):
+            correlated_id = main_logger.get_correlated_id()
+
+        # Ensure it's also in request.state if we got it from logger
+        if correlated_id and not hasattr(request.state, 'correlation_id'):
+            request.state.correlation_id = correlated_id
+
         # Schedule background categorization task and return immediately
         background_tasks.add_task(
             process_categorization,
@@ -40,7 +53,8 @@ async def light_categorize_report(
             req_body.title,
             req_body.description,
             req_body.report_id,
-            req_body.cache_key
+            req_body.cache_key,
+            correlated_id
         )
         return AILightCategorizeResponse(message="Categorization started. Results will be pushed to stream")
     except Exception as e:

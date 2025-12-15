@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timezone
 from app.core.exceptions import CacheError
 from app.domain.constants.stream_constants import REDIS_STREAM_REPORT_LIGHT_CATEGORIZATION
-from app.domain.schema.categorize import CategoryNode, StreamInformation
+from app.domain.schema.categorize import CategoryNode, LightCategorizerStreamInformation
 from app.adapters.cache.base import CacheInterface, StreamInterface
 from app.infra.logger import main_logger
 from app.adapters.ai.llm.ollama import OllamaLLMEngine
@@ -14,10 +14,10 @@ class ResQAICategorizer:
     def __init__(self, logger=None, cache: Optional[CacheInterface] = None, stream: Optional[StreamInterface] = None):
         self.logger = logger if logger is not None else main_logger
         self.ollama_engine = OllamaLLMEngine(model="llava") #TODO: change later as a variable.
-        self.cache = cache  # Can be None if Redis is not available
+        self.cache = cache  # Can be None if Redis is not available.
         self.stream = stream
 
-    async def categorize_report(self, title: str, description: str, category_key: str, report_id: Optional[str] = None) -> List[CategoryNode]:
+    async def categorize_report(self, title: str, description: str, category_key: str, report_id: Optional[str] = None, correlated_id: Optional[str] = None) -> List[CategoryNode]:
         """
         Recursively categorize a report by drilling down through category hierarchies.
 
@@ -26,6 +26,7 @@ class ResQAICategorizer:
             description (str): Report description
             category_key (str): Cache key for categories
             report_id (Optional[str]): Unique report identifier for streaming
+            correlated_id (Optional[str]): Correlation ID for request tracking
 
         Returns:
             List[CategoryNode]: Final leaf categories that match the report
@@ -57,7 +58,8 @@ class ResQAICategorizer:
             categories=category_nodes,
             level=0,
             path=[],
-            report_id=report_id  # propagate report_id for streaming
+            report_id=report_id,  # propagate report_id for streaming
+            correlated_id=correlated_id  # propagate correlated_id for streaming
         )
 
         self.logger.debug("\n" + "=" * 60)
@@ -69,11 +71,12 @@ class ResQAICategorizer:
 
         # Push a final streaming event once categorization is finished
         if self.stream and report_id:
-            stream_payload = StreamInformation(
+            stream_payload = LightCategorizerStreamInformation(
                 report_id=report_id,
                 recognized_categories=[cat.slug for cat in final_categories],
                 time_added=datetime.now(timezone.utc).isoformat(),
                 is_final=True,
+                correlated_id=correlated_id,
             ).model_dump()
             encoded_payload = encode_redis_stream_payload(stream_payload)
             self.logger.debug(
@@ -91,7 +94,8 @@ class ResQAICategorizer:
         categories: List[CategoryNode],
         level: int,
         path: List[str],
-        report_id: Optional[str] = None
+        report_id: Optional[str] = None,
+        correlated_id: Optional[str] = None
     ) -> List[CategoryNode]:
         """
         Recursively categorize through the category tree.
@@ -103,6 +107,7 @@ class ResQAICategorizer:
             level (int): Current recursion depth
             path (List[str]): Current category path for display
             report_id (Optional[str]): Unique report identifier for streaming
+            correlated_id (Optional[str]): Correlation ID for request tracking
 
         Returns:
             List[CategoryNode]: Leaf categories that match
@@ -131,11 +136,12 @@ class ResQAICategorizer:
         # Stream intermediate result after every categorization step if stream is available and report_id is provided
         if self.stream and report_id:
             try:
-                stream_payload = StreamInformation(
+                stream_payload = LightCategorizerStreamInformation(
                     report_id=report_id,
                     recognized_categories=[cat.slug for cat in matched_categories],
                     time_added=datetime.now(timezone.utc).isoformat(),
                     is_final=False,
+                    correlated_id=correlated_id,
                 ).model_dump()
 
                 encoded_payload = encode_redis_stream_payload(stream_payload)
@@ -168,6 +174,7 @@ class ResQAICategorizer:
                     level=level + 1,
                     path=new_path,
                     report_id=report_id,
+                    correlated_id=correlated_id,
                 )
 
                 # If we found specific subcategories, use those
