@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 from app.api.middleware.correlation_id import CorrelationIdMiddleware
 from app.core.config import config
-from app.api.v1.routes.report import categorize_report, summarize_report
+from app.api.v1.routes.report import categorize_report, summarize_report, validate_report
 from app.adapters.cache.redis import RedisCache
 from app.adapters.cache.redis_stream import RedisStream
 from app.infra.logger import main_logger
@@ -99,6 +99,9 @@ app.include_router(
 )
 app.include_router(
         categorize_report.router, prefix="/api/v1/categorize", tags=["Report Categorization"]
+)
+app.include_router(
+    validate_report.router, prefix="/api/v1/validate", tags=["Report Validation"]
 )
 
 if __name__ == "__main__":
