@@ -7,6 +7,32 @@ class MediaRequest(BaseModel):
     file_type: str
 
 
+class EvidenceAnalysisRequest(BaseModel):
+    file_key: str  # S3 object key (also used as evidence_id)
+    file_type: str  # MIME type e.g., "image/jpeg", "video/mp4"
+    report_id: int
+
+
+class EvidenceDetectionFinding(BaseModel):
+    label: str
+    confidence: float
+    bounding_box: List[float]
+
+
+class EvidenceInferenceStreamInformation(BaseModel):
+    evidence_id: str
+    report_id: int
+    findings: List[EvidenceDetectionFinding]
+    analysis_text: str
+    time_added: str
+    is_final: bool
+    correlated_id: Optional[str] = None
+
+
+class EvidenceAnalysisResponse(BaseModel):
+    message: str
+
+
 class Detection(BaseModel):
     class_: str
     confidence: float

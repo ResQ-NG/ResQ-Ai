@@ -4,9 +4,10 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 from app.api.middleware.correlation_id import CorrelationIdMiddleware
 from app.core.config import config
-from app.api.v1.routes.report import categorize_report, summarize_report, validate_report
+from app.api.v1.routes.report import categorize_report, summarize_report, validate_report, analyze_evidence
 from app.adapters.cache.redis import RedisCache
 from app.adapters.cache.redis_stream import RedisStream
+from app.adapters.storage.s3 import S3Client
 from app.infra.logger import main_logger
 
 # Load environment variables from .env file
@@ -36,6 +37,16 @@ async def lifespan(fastapi_app: FastAPI):
         main_logger.log(f"Failed to initialize Redis stream: {e}", "ERROR")
         # Don't raise - stream is optional for some operations
         fastapi_app.state.redis_stream = None
+
+    # Startup: Initialize S3 client
+    try:
+        s3_client = S3Client()
+        fastapi_app.state.s3_client = s3_client
+        main_logger.log("S3 client initialized successfully", "INFO")
+    except Exception as e:  # pylint: disable=broad-except
+        main_logger.log(f"Failed to initialize S3 client: {e}", "WARNING")
+        # Don't raise - S3 is optional if not processing evidence
+        fastapi_app.state.s3_client = None
 
     yield
 
@@ -102,6 +113,9 @@ app.include_router(
 )
 app.include_router(
     validate_report.router, prefix="/api/v1/validate", tags=["Report Validation"]
+)
+app.include_router(
+    analyze_evidence.router, prefix="/api/v1/evidence", tags=["Evidence Analysis"]
 )
 
 if __name__ == "__main__":

@@ -1,1 +1,11 @@
 """this would be responsible for taking the report evidences when all of them are uploaded or updated properly and be doing a deeper analysis for the stuff and even possible re categorization. after the evidence upload. it could also take the validation result too if its ready and maybe do more follow up. an admin can even trigger an infer report task from their end if the evidence are still in process of recollection. since this is deeper and could cost more. we might need to use this sparingly. we could even take this up a notch and do things like inferring a case. which is a collection of report."""
+
+
+
+# infer evidence...
+
+
+
+
+
+#infer report ...

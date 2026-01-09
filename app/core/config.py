@@ -5,6 +5,10 @@ Loads and validates environment variables.
 
 import os
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load .env file before reading environment variables
+load_dotenv()
 
 
 class Config:
@@ -83,6 +87,6 @@ class Config:
         if cls.is_production() and not cls.CACHE_PASSWORD:
             raise ValueError("REDIS_PASSWORD is required in production")
         return True
-        
+
 # Create a singleton instance
 config = Config()
